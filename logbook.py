@@ -1,25 +1,35 @@
-## Test commit
-
 import sqlite3 as lite
 
+# sqlite3 connection
 con = lite.connect('logbook.db')
 cur = con.cursor()
+
+# Constants
+HLINE = '-' * 55
 
 
 def list_flights():
     """Print a formatted list of all flights in the Logbook."""
 
-    cur.execute("""SELECT Date, Immat, Temps, CDB
+    cur.execute("""SELECT Date, Immat, Temps, CDB, Atterrissages, Nature, Notes
                 FROM Vols
                 INNER JOIN Avions on Avions.Avion_ID = Vols.Avion_ID
                 ORDER BY Date""")
     rows = cur.fetchall()
+
+    # Convert the returned tuple to a list so it can be modified
     for row in rows:
+        row = list(row)
+
+        # If flown as pilot (field = 1) then change it to 'CDB'
         if row[3]:
-            cdb = "CDB"
+            row[3] = 'CDB'
         else:
-            cdb = ''
-        print(row[0], row[1], pretty_time(row[2]), cdb)
+            row[3] = ''
+
+        # Convert the minutes field to HH:MM and print the row
+        row[2] = pretty_time(row[2])
+        print('{} {} {} {:3} {} {:20} {}'.format(*row))
 
 
 def list_planes():
@@ -54,7 +64,7 @@ def list_planes():
         subtotal.append(pretty_time(sum([i[0] for i in planetotals[index]])))
 
     # Print the table header
-    print('=' * 55)
+    print(HLINE)
     print('{:20} {:20} {:20} '.format('Pilote', 'Élève', 'Total'))
     print('{:20} {:20} {:20} '.format(*['=' * 13] * 3))
 
@@ -72,9 +82,9 @@ def list_planes():
         print('{:6} {:13} {:6} {:13} {:6} {:13}'.format(*row_output))
     
     # Print the table footer and subtotals
-    print('-' * 55)
+    print(HLINE)
     print('{:20} {:20} {:20} '.format(*subtotal))
-    print('-' * 55)
+    print(HLINE)
 
 
 def pretty_time(minutes):
